@@ -18,8 +18,10 @@ RSpec.describe RailsMiddlewareDelegator do
 
   let(:app) { double('app', call: true) }
   let(:env) { double('env') }
-  let(:fake_rails) { double('Rails', env: rails_env) }
-  let(:rails_env) { ActiveSupport::StringInquirer.new('development') }
+  let(:fake_rails) { double('Rails', application: rails_app) }
+  let(:rails_app) { double('application', config: rails_config) }
+  let(:rails_config) { double('config', cache_classes: cache_classes) }
+  let(:cache_classes) { false }
 
   subject(:delegator) { described_class.new('WrappedClass') }
 
@@ -35,21 +37,19 @@ RSpec.describe RailsMiddlewareDelegator do
 
   describe '#new' do
     it 'sets initialization_args' do
-      expect {
-        delegator.new(1, 2, 3)
-      }.to change {
+      expect { delegator.new(1, 2, 3) }.to change {
         delegator.initialization_args
       }.from(nil).to([1, 2, 3])
     end
 
-    context 'when rails env is development' do
+    context 'when rails is configured to not cache_classes' do
       it 'returns self' do
         expect(delegator.new(1, 2, 3)).to eq(delegator)
       end
     end
 
-    context 'when rails env is not development' do
-      let(:rails_env) { ActiveSupport::StringInquirer.new('underwater') }
+    context 'when rails is configured to cache classes' do
+      let(:cache_classes) { true }
 
       it 'returns an instance of klass' do
         expect(delegator.new(1, 2, 3)).to be_a(WrappedClass)

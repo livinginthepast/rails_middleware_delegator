@@ -32,7 +32,7 @@ class RailsMiddlewareDelegator
 
   def new(*args)
     @initialization_args = args
-    Rails.env.development? ? self : klass.constantize.new(*args)
+    Rails.application.config.cache_classes ? klass.constantize.new(*args) : self
   end
 
   def call(*args)
