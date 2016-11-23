@@ -1,41 +1,46 @@
-# RailsMiddlewareDelegator
+RailsMiddlewareDelegator
+========================
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/rails_middleware_delegator`. To experiment with that code, run `bin/console` for an interactive prompt.
+When using Rails middleware, a common problem is that middleware loaded from `lib`
+does not reload between requests. In order for changes to these middleware classes
+to be reflected in a running server, the development server process must be
+killed and restarted.
 
-TODO: Delete this and the text above, and describe your gem
+If one were to drop a middleware class into a subdirectory of `app` and rely on
+autoloading, however, changing any other autoloaded file and making a new
+server request results in an error, `A copy of X has been removed from the module
+tree bus is still active`. Upon starting the server, an instance of the class was
+loaded into memory. At the end of the request, the class was unloaded. On the
+second request upon running through the middleware stack, Rails detected that it
+was executing through an instance of an unloaded class. Boom!
 
-## Installation
+This gem provides a delegator class that can wrap the unloadable middleware. Instead
+of registering the middleware itself, you can use an instance of the delegator,
+which being a gem managed by bundler will not be unloaded between requests.
 
-Add this line to your application's Gemfile:
+In environments where `cache_classes` is `true`, the delegator steps out of the way
+and adds the delegated middleware directly onto the stack. When `false`, it holds
+onto any passed configuration and instantiates a new middleware instance for each
+request.
 
-```ruby
-gem 'rails_middleware_delegator'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install rails_middleware_delegator
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+Rails.application.config.middleware.use RailsMiddlewareDelegator.new('MyMiddleware')
+```
 
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/rails_middleware_delegator. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at
+https://github.com/[USERNAME]/rails_middleware_delegator. This project is intended
+to be a safe, welcoming space for collaboration, and contributors are expected to
+adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
+The gem is available as open source under the terms of the
+[MIT License](http://opensource.org/licenses/MIT).
 
